@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculo Carlos | Calculadora Tributaria Inmobiliaria Perú</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- jsPDF & autoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f5fa',
+              100: '#e1ecf5',
+              600: '#1d4ed8',
+              800: '#0f294a',
+              900: '#0a1d36',
+              gold: '#d97706',
+              emerald: '#059669',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .table-header {
+      background-color: #0f294a;
+      color: #ffffff;
+    }
+    .zebra-striping tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    .zebra-striping tbody tr:hover {
+      background-color: #f1f5f9;
+      transition: background-color 0.15s ease;
+    }
+    .input-focus-ring:focus {
+      outline: none;
+      border-color: #1d4ed8;
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- HEADER CORPORATIVO -->
+  <header class="bg-brand-900 text-white shadow-lg border-b border-brand-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center shadow-md">
+          <i class="fa-solid fa-calculator text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            Calculo Carlos <span class="text-xs bg-blue-500/20 text-blue-300 font-normal px-2 py-0.5 rounded border border-blue-400/30">Inmobiliario</span>
+          </h1>
+          <p class="text-xs text-slate-300">Liquidación de Alcabala (SAT) y Renta 1ra / 2da Cat. (SUNAT)</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <!-- Quick indicators -->
+        <div class="hidden md:flex items-center gap-4 bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-700 text-xs">
+          <div><span class="text-slate-400">UIT:</span> <strong id="headerUitBadge" class="text-amber-400 font-mono">S/ 5,500</strong></div>
+          <div class="w-px h-4 bg-slate-600"></div>
+          <div><span class="text-slate-400">TC SBS:</span> <strong id="headerTcBadge" class="text-emerald-400 font-mono">S/ 3.750</strong></div>
+        </div>
+
+        <button onclick="openHistoryModal()" class="text-xs flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg border border-slate-700 transition">
+          <i class="fa-solid fa-clock-rotate-left"></i> Historial
+        </button>
+        <button onclick="resetAllFields()" class="text-xs flex items-center gap-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-3 py-2 rounded-lg border border-rose-800/50 transition" title="Reiniciar formulario">
+          <i class="fa-solid fa-arrow-rotate-left"></i> Reiniciar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- WIZARD STEP NAVIGATION BAR -->
+  <div class="bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex items-center justify-between sm:justify-center sm:space-x-8">
+        
+        <!-- Step 1 -->
+        <button onclick="goToStep(1)" id="stepBtn-1" class="flex items-center gap-2 group focus:outline-none">
+          <span id="stepBadge-1" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow">1</span>
+          <div class="text-left hidden sm:block">
+            <p class="text-xs font-semibold text-slate-900">Paso 1</p>
+            <p class="text-[11px] text-slate-500">Datos & Parámetros</p>
+          </div>
+        </button>
+
+        <div class="h-0.5 w-8 sm:w-16 bg-slate-200" id="stepConnector-1"></div>
+
+        <!-- Step 2 -->
+        <button onclick="goToStep(2)" id="stepBtn-2" class="flex items-center gap-2 group focus:outline-none">
+          <span id="stepBadge-2" class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">2</span>
+          <div class="text-left hidden sm:block">
+            <p class="text-xs font-semibold text-slate-700">Paso 2</p>
+            <p class="text-[11px] text-slate-500">Tipo de Operación</p>
+          </div>
+        </button>
+
+        <div class="h-0.5 w-8 sm:w-16 bg-slate-200" id="stepConnector-2"></div>
+
+        <!-- Step 3 -->
+        <button onclick="goToStep(3)" id="stepBtn-3" class="flex items-center gap-2 group focus:outline-none">
+          <span id="stepBadge-3" class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">3</span>
+          <div class="text-left hidden sm:block">
+            <p class="text-xs font-semibold text-slate-700">Paso 3</p>
+            <p class="text-[11px] text-slate-500">Cálculos Específicos</p>
+          </div>
+        </button>
+
+        <div class="h-0.5 w-8 sm:w-16 bg-slate-200" id="stepConnector-3"></div>
+
+        <!-- Step 4 -->
+        <button onclick="goToStep(4)" id="stepBtn-4" class="flex items-center gap-2 group focus:outline-none">
+          <span id="stepBadge-4" class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">4</span>
+          <div class="text-left hidden sm:block">
+            <p class="text-xs font-semibold text-slate-700">Paso 4</p>
+            <p class="text-[11px] text-slate-500">Liquidación & PDF</p>
+          </div>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+    
+    <!-- ========================================== -->
+    <!-- PASO 1: DATOS GLOBALES Y ASESOR            -->
+    <!-- ========================================== -->
+    <section id="stepSection-1" class="space-y-6">
+      
+      <!-- Card: Datos del Cliente e Inmueble -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h2 class="text-base font-bold text-brand-900 flex items-center gap-2">
+            <i class="fa-solid fa-user-tag text-blue-600"></i> 1.1 Información del Cliente e Inmueble
+          </h2>
+          <span class="text-xs bg-blue-100 text-blue-800 font-medium px-2.5 py-0.5 rounded">Para Reporte PDF</span>
+        </div>
+        
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Cliente -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nombre del Cliente / Contribuyente *</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-user text-sm"></i>
+              </span>
+              <input type="text" id="clientName" value="Inversiones & Gestiones SAC" 
+                class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring" placeholder="Ej. Juan Pérez">
+            </div>
+          </div>
+
+          <!-- Inmueble / Proyecto -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Dirección / Proyecto del Inmueble *</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-map-location-dot text-sm"></i>
+              </span>
+              <input type="text" id="propertyAddress" value="Terreno Carabayllo - Mz. B Lote 14, Urb. Las Palmeras" 
+                class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring" placeholder="Ej. Av. Larco 450 Dpto 802">
+            </div>
+          </div>
+
+          <!-- Tipo de Propiedad -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tipo de Propiedad *</label>
+            <select id="propertyType" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring bg-white">
+              <option value="Casa">Casa</option>
+              <option value="Departamento">Departamento</option>
+              <option value="Terreno Urbano" selected>Terreno Urbano</option>
+              <option value="Terreno Rústico">Terreno Rústico</option>
+              <option value="Local Comercial">Local Comercial</option>
+              <option value="Cochera/Depósito">Cochera / Depósito</option>
+              <option value="Aires y Techos">Aires y Techos</option>
+            </select>
+          </div>
+
+          <!-- % Participación (Acciones y Derechos) -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+              <span>% de Participación (Acciones y Derechos)</span>
+              <span id="participationDisplay" class="text-blue-600 font-mono font-bold">100.00%</span>
+            </label>
+            <div class="relative">
+              <input type="number" id="participationRate" min="1" max="100" step="0.01" value="100" 
+                oninput="updateParticipationDisplay(this.value); triggerCalculations();"
+                class="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-semibold">
+              <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 font-bold text-sm">%</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">100% si es propiedad exclusiva o porcentaje proporcional en copropiedad.</p>
+          </div>
+
+          <!-- UIT -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+              <span>Valor de la UIT (Soles) *</span>
+              <span class="text-xs text-amber-600 font-medium">Vigente 2026</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold text-xs">S/</span>
+              <input type="number" id="uitValue" min="1000" step="50" value="5500" 
+                oninput="document.getElementById('headerUitBadge').innerText = 'S/ ' + formatNumber(this.value); triggerCalculations();"
+                class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">Deducción de Alcabala = 10 UIT (<span id="deduccionUitPreview" class="font-bold text-slate-700">S/ 55,000</span>).</p>
+          </div>
+
+          <!-- Tipo de Cambio SBS -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+              <span>Tipo de Cambio Actual (TC SBS) *</span>
+              <span class="text-xs text-emerald-600 font-medium">Referencial del día</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold text-xs">S/</span>
+              <input type="number" id="exchangeRate" min="1" step="0.001" value="3.750" 
+                oninput="document.getElementById('headerTcBadge').innerText = 'S/ ' + parseFloat(this.value||0).toFixed(3); syncGlobalTcToInputs(); triggerCalculations();"
+                class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">Aplica para conversiones automáticas entre USD $ y PEN S/.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Asesor Inmobiliario y Logo -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h2 class="text-base font-bold text-brand-900 flex items-center gap-2">
+            <i class="fa-solid fa-briefcase text-blue-600"></i> 1.2 Datos del Asesor Inmobiliario y Marca (PDF)
+          </h2>
+          <span class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium">Membrete Personalizado</span>
+        </div>
+        
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Nombre Asesor -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nombre del Asesor Inmobiliario</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-id-badge text-sm"></i>
+              </span>
+              <input type="text" id="agentName" value="Lic. Carlos Mendoza" 
+                class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring" placeholder="Ej. Carlos Mendoza">
+            </div>
+          </div>
+
+          <!-- Teléfono Asesor -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Teléfono / WhatsApp</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-brands fa-whatsapp text-sm text-emerald-600"></i>
+              </span>
+              <input type="text" id="agentPhone" value="+51 987 654 321" 
+                class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring" placeholder="Ej. +51 999 888 777">
+            </div>
+          </div>
+
+          <!-- Inmobiliaria -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Empresa Inmobiliaria / Corretaje</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-building text-sm"></i>
+              </span>
+              <input type="text" id="agentAgency" value="Prime Real Estate Perú" 
+                class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring" placeholder="Ej. Century 21 / Remax / Independiente">
+            </div>
+          </div>
+
+          <!-- Subida de Logo -->
+          <div class="lg:col-span-3 pt-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Logo Inmobiliario para el Reporte PDF (Opcional - PNG/JPG)</label>
+            <div class="flex items-center gap-4">
+              <label class="cursor-pointer bg-slate-50 hover:bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg px-4 py-3 flex items-center gap-2 text-xs font-medium text-slate-600 transition">
+                <i class="fa-solid fa-cloud-arrow-up text-blue-600 text-base"></i>
+                <span id="logoUploadText">Seleccionar imagen de logo...</span>
+                <input type="file" id="logoFileInput" accept="image/*" class="hidden" onchange="handleLogoUpload(this)">
+              </label>
+
+              <div id="logoPreviewContainer" class="hidden flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                <img id="logoPreviewImg" src="" alt="Logo preview" class="h-10 max-w-[120px] object-contain rounded">
+                <button onclick="removeLogo()" type="button" class="text-rose-500 hover:text-rose-700 p-1 text-xs" title="Quitar logo">
+                  <i class="fa-solid fa-circle-xmark"></i>
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-400">Recomendado: imagen horizontal con fondo blanco o transparente.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Button Next -->
+      <div class="flex justify-end pt-2">
+        <button onclick="goToStep(2)" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm shadow flex items-center gap-2 transition">
+          Continuar a Selección de Operación <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- PASO 2: MODO DE OPERACIÓN                  -->
+    <!-- ========================================== -->
+    <section id="stepSection-2" class="space-y-6 hidden">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="max-w-3xl mx-auto text-center mb-6">
+          <h2 class="text-xl font-bold text-brand-900">¿Qué tipo de cálculo tributario deseas realizar?</h2>
+          <p class="text-xs text-slate-500 mt-1">El asistente adaptará las fórmulas, campos numéricos y la exportación del PDF según tu elección.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+          
+          <!-- Mode 1: Compraventa Completa -->
+          <label class="cursor-pointer border-2 rounded-xl p-5 transition flex flex-col justify-between hover:border-blue-500 hover:bg-blue-50/30" id="modeCard-full">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold">
+                  <i class="fa-solid fa-scale-balanced"></i>
+                </span>
+                <input type="radio" name="operationMode" value="full" checked onchange="selectMode('full')" class="w-4 h-4 text-blue-600">
+              </div>
+              <h3 class="text-sm font-bold text-slate-900">Compraventa Integral (Comprador + Vendedor)</h3>
+              <p class="text-xs text-slate-500 mt-1">Calcula en paralelo el Impuesto de Alcabala (SAT) para el adquiriente y el Impuesto a la Renta de 2da Cat. (SUNAT) para el propietario.</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-200 text-[11px] font-semibold text-blue-700 flex items-center gap-1">
+              <i class="fa-solid fa-check-double"></i> Alcabala (3%) + Renta 2da (5%)
+            </div>
+          </label>
+
+          <!-- Mode 2: Solo Alcabala -->
+          <label class="cursor-pointer border-2 rounded-xl p-5 transition flex flex-col justify-between hover:border-blue-500 hover:bg-blue-50/30" id="modeCard-alcabala">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg font-bold">
+                  <i class="fa-solid fa-file-invoice-dollar"></i>
+                </span>
+                <input type="radio" name="operationMode" value="alcabala" onchange="selectMode('alcabala')" class="w-4 h-4 text-blue-600">
+              </div>
+              <h3 class="text-sm font-bold text-slate-900">Solo Impuesto de Alcabala (Comprador)</h3>
+              <p class="text-xs text-slate-500 mt-1">Liquidación municipal para el comprador. Compara precio de venta vs autovalúo con factor IPM y aplica deducción de 10 UIT.</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-200 text-[11px] font-semibold text-indigo-700 flex items-center gap-1">
+              <i class="fa-solid fa-check"></i> Alcabala SAT (3%)
+            </div>
+          </label>
+
+          <!-- Mode 3: Solo Renta 2da -->
+          <label class="cursor-pointer border-2 rounded-xl p-5 transition flex flex-col justify-between hover:border-blue-500 hover:bg-blue-50/30" id="modeCard-renta2">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold">
+                  <i class="fa-solid fa-hand-holding-dollar"></i>
+                </span>
+                <input type="radio" name="operationMode" value="renta2" onchange="selectMode('renta2')" class="w-4 h-4 text-blue-600">
+              </div>
+              <h3 class="text-sm font-bold text-slate-900">Solo Renta 2da Categoría (Vendedor)</h3>
+              <p class="text-xs text-slate-500 mt-1">Ganancia de capital por enajenación de inmuebles. Permite compra histórica en USD/PEN, corrección monetaria MEF (ICM) y mejoras.</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-200 text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+              <i class="fa-solid fa-check"></i> Renta SUNAT (5%)
+            </div>
+          </label>
+
+          <!-- Mode 4: Renta 1ra Alquiler -->
+          <label class="cursor-pointer border-2 rounded-xl p-5 transition flex flex-col justify-between hover:border-blue-500 hover:bg-blue-50/30" id="modeCard-renta1">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-bold">
+                  <i class="fa-solid fa-key"></i>
+                </span>
+                <input type="radio" name="operationMode" value="renta1" onchange="selectMode('renta1')" class="w-4 h-4 text-blue-600">
+              </div>
+              <h3 class="text-sm font-bold text-slate-900">Arrendamiento (Renta de 1ra Categoría)</h3>
+              <p class="text-xs text-slate-500 mt-1">Cálculo del 5% mensual sobre alquiler percibido, proyección anual y verificación de presunción legal mínima del 6% del autovalúo.</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-200 text-[11px] font-semibold text-amber-700 flex items-center gap-1">
+              <i class="fa-solid fa-check"></i> Alquileres SUNAT (5%)
+            </div>
+          </label>
+
+        </div>
+
+        <div class="flex justify-between items-center max-w-4xl mx-auto mt-8 pt-4 border-t border-slate-200">
+          <button onclick="goToStep(1)" class="text-slate-600 hover:text-slate-800 text-sm font-medium flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Volver a Datos Generales
+          </button>
+          <button onclick="goToStep(3)" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm shadow flex items-center gap-2 transition">
+            Continuar a Cálculos <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- PASO 3: PARÁMETROS Y CÁLCULOS DETALLADOS   -->
+    <!-- ========================================== -->
+    <section id="stepSection-3" class="space-y-6 hidden">
+      
+      <!-- SUB-MÓDULO: ALCABALA -->
+      <div id="moduleAlcabalaContainer" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-brand-900 text-white px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/30 flex items-center justify-center text-blue-300">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-white">Módulo 1: Impuesto de Alcabala (Comprador - SAT / Municipalidad)</h2>
+              <p class="text-xs text-slate-300">Art. 21 al 29 del TUO de la Ley de Tributación Municipal (D.S. 156-2004-EF)</p>
+            </div>
+          </div>
+          <span class="text-xs bg-blue-500 text-white font-semibold px-2.5 py-1 rounded">Tasa: 3%</span>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            
+            <!-- Precio de Venta -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between items-center">
+                <span>Precio de Venta (Pactado) *</span>
+                <div class="flex bg-slate-200 p-0.5 rounded text-xs">
+                  <button type="button" onclick="setAlcabalaCurrency('PEN')" id="alcabalaCurrPenBtn" class="px-2 py-0.5 rounded font-bold transition bg-white text-blue-700 shadow-xs">PEN S/</button>
+                  <button type="button" onclick="setAlcabalaCurrency('USD')" id="alcabalaCurrUsdBtn" class="px-2 py-0.5 rounded font-semibold text-slate-600 transition">USD $</button>
+                </div>
+              </label>
+              <div class="relative">
+                <span id="alcabalaCurrencySymbol" class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">S/</span>
+                <input type="number" id="alcabalaSalePrice" value="250000" min="0" step="100" oninput="triggerCalculations()"
+                  class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+              </div>
+              <p id="alcabalaConvertedPreview" class="text-[11px] text-slate-500 mt-1">Equivalente: S/ 250,000.00</p>
+            </div>
+
+            <!-- Autovalúo Municipal -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+                <span>Valor de Autovalúo (PU / HR) *</span>
+                <span class="text-xs text-slate-400">En Soles (PEN)</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">S/</span>
+                <input type="number" id="alcabalaAutovaluo" value="180000" min="0" step="100" oninput="triggerCalculations()"
+                  class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">Según Hoja Resumen (HR) y Predio Urbano (PU) municipal.</p>
+            </div>
+
+            <!-- Factor IPM -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+                <span>Factor de Ajuste IPM *</span>
+                <span class="text-xs text-slate-400">Por defecto 1.00</span>
+              </label>
+              <div class="relative">
+                <input type="number" id="alcabalaIpm" value="1.00" min="0.5" step="0.001" oninput="triggerCalculations()"
+                  class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">Reajuste por Índice de Precios al por Mayor (INEI).</p>
+            </div>
+
+          </div>
+
+          <!-- Condición Especial: Primera Venta Constructora -->
+          <div class="bg-blue-50/60 border border-blue-200 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-city text-blue-700"></i>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">¿Es primera venta realizada por empresa constructora / inmobiliaria?</h4>
+                  <p class="text-[11px] text-slate-600">Art. 22 de la Ley de Tributación Municipal (Inafectación al valor de la edificación).</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="alcabalaConstructorSwitch" onchange="toggleConstructorOptions()" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+
+            <!-- Constructor Options Sub-panel -->
+            <div id="constructorOptionsPanel" class="hidden mt-4 pt-4 border-t border-blue-200/80 space-y-3">
+              <p class="text-xs font-semibold text-slate-700">Selecciona el tratamiento tributario aplicable:</p>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label class="flex items-start gap-2.5 p-3 rounded-lg border border-blue-200 bg-white cursor-pointer hover:bg-blue-50/50">
+                  <input type="radio" name="constructorMode" value="total_exempt" checked onchange="triggerCalculations()" class="mt-1 text-blue-600">
+                  <div>
+                    <span class="text-xs font-bold text-slate-900 block">Opción A: Inafecto Total (S/ 0.00)</span>
+                    <span class="text-[11px] text-slate-500">Bien en plano o con inafectación integral de la operación.</span>
+                  </div>
+                </label>
+
+                <label class="flex items-start gap-2.5 p-3 rounded-lg border border-blue-200 bg-white cursor-pointer hover:bg-blue-50/50">
+                  <input type="radio" name="constructorMode" value="land_only" onchange="triggerCalculations()" class="mt-1 text-blue-600">
+                  <div class="w-full">
+                    <span class="text-xs font-bold text-slate-900 block">Opción B: Paga solo sobre el Valor del Terreno</span>
+                    <span class="text-[11px] text-slate-500 block mb-2">Se grava únicamente el valor atribuible al terreno arancelario.</span>
+                    
+                    <div id="landPercentageContainer" class="mt-2 flex items-center gap-2">
+                      <span class="text-xs font-semibold text-slate-700">% Terreno:</span>
+                      <div class="relative w-28">
+                        <input type="number" id="alcabalaLandPercentage" value="20" min="1" max="100" step="1" 
+                          oninput="triggerCalculations()"
+                          class="w-full pl-2 pr-6 py-1 text-xs border border-slate-300 rounded font-mono font-bold">
+                        <span class="absolute inset-y-0 right-0 pr-2 flex items-center text-xs font-bold text-slate-400">%</span>
+                      </div>
+                      <span class="text-[11px] text-slate-500">(del Autovalúo / Precio)</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick calculation preview card -->
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div>
+              <span class="text-slate-500">Base Imponible Neta:</span>
+              <strong id="alcabalaQuickBase" class="text-slate-900 font-mono ml-1">S/ 0.00</strong>
+            </div>
+            <div>
+              <span class="text-slate-500">Tramo Inafecto (10 UIT):</span>
+              <strong id="alcabalaQuickDeduction" class="text-amber-700 font-mono ml-1">-S/ 55,000.00</strong>
+            </div>
+            <div class="bg-blue-100 text-blue-900 font-semibold px-3 py-1 rounded">
+              Alcabala a Pagar (3%): <span id="alcabalaQuickTotal" class="font-bold font-mono">S/ 0.00</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SUB-MÓDULO: RENTA 2DA CATEGORÍA -->
+      <div id="moduleRenta2Container" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-brand-900 text-white px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/30 flex items-center justify-center text-emerald-300">
+              <i class="fa-solid fa-money-bill-trend-up"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-white">Módulo 2: Impuesto a la Renta - 2da Categoría (Vendedor - SUNAT)</h2>
+              <p class="text-xs text-slate-300">Ganancia de Capital por venta inmobiliaria (Art. 24 y Art. 36 Ley Impuesto a la Renta)</p>
+            </div>
+          </div>
+          <span class="text-xs bg-emerald-600 text-white font-semibold px-2.5 py-1 rounded">Tasa: 5%</span>
+        </div>
+
+        <div class="p-6 space-y-6">
+          
+          <!-- FILA 1: DATOS DE LA VENTA (HOY) -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-tag text-emerald-600"></i> A. Datos de la Venta (Actual)
+              </h3>
+              <button type="button" onclick="syncAlcabalaPriceToRenta()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-copy"></i> Copiar precio desde Alcabala
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Precio de Venta -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between items-center">
+                  <span>Precio de Venta Actual *</span>
+                  <div class="flex bg-slate-200 p-0.5 rounded text-xs">
+                    <button type="button" onclick="setRentaSaleCurrency('PEN')" id="rentaSalePenBtn" class="px-2 py-0.5 rounded font-bold transition bg-white text-emerald-700 shadow-xs">PEN S/</button>
+                    <button type="button" onclick="setRentaSaleCurrency('USD')" id="rentaSaleUsdBtn" class="px-2 py-0.5 rounded font-semibold text-slate-600 transition">USD $</button>
+                  </div>
+                </label>
+                <div class="relative">
+                  <span id="rentaSaleCurrencySymbol" class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">S/</span>
+                  <input type="number" id="rentaSalePrice" value="250000" min="0" step="100" oninput="triggerCalculations()"
+                    class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+                </div>
+                <p id="rentaSaleConvertedPreview" class="text-[11px] text-slate-500 mt-1">En Soles: S/ 250,000.00</p>
+              </div>
+
+              <!-- TC de Venta -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+                  <span>TC de Venta (SBS Venta) *</span>
+                  <span class="text-xs text-slate-400">Autocompletado</span>
+                </label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">S/</span>
+                  <input type="number" id="rentaSaleTc" value="3.750" min="1" step="0.001" oninput="triggerCalculations()"
+                    class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">TC aplicable a la enajenación.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-200"></div>
+
+          <!-- FILA 2: DATOS DE LA ADQUISICIÓN / COMPRA (PASADO) -->
+          <div>
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <i class="fa-solid fa-clock-rotate-left text-blue-600"></i> B. Datos de Adquisición / Compra Original (Pasado)
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- Precio de Adquisición -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between items-center">
+                  <span>Precio de Adquisición *</span>
+                  <div class="flex bg-slate-200 p-0.5 rounded text-xs">
+                    <button type="button" onclick="setRentaAcqCurrency('PEN')" id="rentaAcqPenBtn" class="px-2 py-0.5 rounded font-semibold text-slate-600 transition">PEN S/</button>
+                    <button type="button" onclick="setRentaAcqCurrency('USD')" id="rentaAcqUsdBtn" class="px-2 py-0.5 rounded font-bold transition bg-white text-blue-700 shadow-xs">USD $</button>
+                  </div>
+                </label>
+                <div class="relative">
+                  <span id="rentaAcqCurrencySymbol" class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">$</span>
+                  <input type="number" id="rentaAcqPrice" value="45000" min="0" step="100" oninput="triggerCalculations()"
+                    class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+                </div>
+                <p id="rentaAcqConvertedPreview" class="text-[11px] text-slate-500 mt-1">Costo Histórico Soles: S/ 148,500.00</p>
+              </div>
+
+              <!-- TC Histórico (solo si compra en USD) -->
+              <div id="historicalTcContainer">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+                  <span>TC Histórico (Fecha Compra) *</span>
+                  <span class="text-xs text-amber-600 font-semibold">Si compró en USD</span>
+                </label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">S/</span>
+                  <input type="number" id="rentaHistoricalTc" value="3.300" min="1" step="0.001" oninput="triggerCalculations()"
+                    class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">Convierte costo USD a PEN de la fecha.</p>
+              </div>
+
+              <!-- Año de Compra & ICM MEF -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+                  <span>Año de Compra (ICM MEF)</span>
+                  <span class="text-xs text-blue-600 font-medium">Resolución MEF</span>
+                </label>
+                <select id="rentaAcqYear" onchange="handleYearChange(this.value)" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring bg-white font-mono">
+                  <!-- Generated via JS: 2026 down to 2004 -->
+                </select>
+                <p class="text-[11px] text-slate-500 mt-1">Autocompleta el factor oficial.</p>
+              </div>
+
+              <!-- Factor ICM MEF (Editable) -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+                  <span>Factor ICM (Ajuste MEF) *</span>
+                  <span class="text-xs text-slate-400">Editable</span>
+                </label>
+                <div class="relative">
+                  <input type="number" id="rentaIcmFactor" value="1.25" min="1.0" step="0.01" oninput="triggerCalculations()"
+                    class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">Multiplica el costo en Soles.</p>
+              </div>
+
+            </div>
+
+            <!-- Mejoras Demostrables -->
+            <div class="mt-4 max-w-md">
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+                <span>Costos Adicionales / Mejoras Demostrables (Soles)</span>
+                <span class="text-xs text-slate-400">Opcional</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">S/</span>
+                <input type="number" id="rentaImprovements" value="0" min="0" step="100" oninput="triggerCalculations()"
+                  class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">Con comprobante de pago bancarizado.</p>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-200"></div>
+
+          <!-- FILA 3: EXONERACIONES E INAFECTACIONES DE LEY -->
+          <div>
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-halved text-amber-600"></i> C. Exoneraciones e Inafectaciones de Ley (Switches)
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              
+              <!-- Switch 1: Antes del 2004 -->
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-2">
+                <div>
+                  <span class="text-xs font-bold text-slate-800 block">¿Adquirido antes del 01/01/2004?</span>
+                  <span class="text-[11px] text-slate-500">Inafecto por la 35ta Disp. Transitoria Ley del Impuesto a la Renta.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer mt-1">
+                  <input type="checkbox" id="switchPre2004" onchange="triggerCalculations()" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+
+              <!-- Switch 2: Casa Habitación -->
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-2">
+                <div>
+                  <span class="text-xs font-bold text-slate-800 block">¿Califica como Casa-Habitación?</span>
+                  <span class="text-[11px] text-slate-500">Habitada por lo menos 2 años y no destinada a negocio ni comercio.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer mt-1">
+                  <input type="checkbox" id="switchCasaHabitacion" onchange="triggerCalculations()" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+
+              <!-- Switch 3: A título gratuito -->
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-2">
+                <div>
+                  <span class="text-xs font-bold text-slate-800 block">¿Herencia / Donación (Gratuito)?</span>
+                  <span class="text-[11px] text-slate-500">Si fue posterior a 01/08/2012, costo computable tributario puede ser S/ 0.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer mt-1">
+                  <input type="checkbox" id="switchGratuito" onchange="handleGratuitoSwitch(this.checked)" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+                </label>
+              </div>
+
+            </div>
+
+            <!-- Banner if exempted -->
+            <div id="rentaExemptBanner" class="hidden mt-3 p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-lg text-xs font-semibold flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+              <span>OPERACIÓN EXONERADA / INAFECTA DEL IMPUESTO A LA RENTA POR LEY (IMPUESTO: S/ 0.00).</span>
+            </div>
+          </div>
+
+          <!-- Quick calculation preview card -->
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div>
+              <span class="text-slate-500">Costo Actualizado (ICM):</span>
+              <strong id="rentaQuickCosto" class="text-slate-900 font-mono ml-1">S/ 0.00</strong>
+            </div>
+            <div>
+              <span class="text-slate-500">Ganancia de Capital Neta:</span>
+              <strong id="rentaQuickGain" class="text-slate-900 font-mono ml-1">S/ 0.00</strong>
+            </div>
+            <div class="bg-emerald-100 text-emerald-900 font-semibold px-3 py-1 rounded">
+              Impuesto Renta 2da (5%): <span id="rentaQuickTotal" class="font-bold font-mono">S/ 0.00</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SUB-MÓDULO: RENTA 1RA CATEGORÍA (ALQUILERES) -->
+      <div id="moduleRenta1Container" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-brand-900 text-white px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/30 flex items-center justify-center text-amber-300">
+              <i class="fa-solid fa-house-chimney-user"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-white">Módulo 3: Impuesto a la Renta - 1ra Categoría (Arrendamientos)</h2>
+              <p class="text-xs text-slate-300">Alquileres de predios y presunción legal del 6% de autovalúo (Art. 23 Ley IR)</p>
+            </div>
+          </div>
+          <span class="text-xs bg-amber-600 text-white font-semibold px-2.5 py-1 rounded">Tasa: 5%</span>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Alquiler Mensual -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between items-center">
+                <span>Monto del Alquiler Mensual *</span>
+                <div class="flex bg-slate-200 p-0.5 rounded text-xs">
+                  <button type="button" onclick="setRentCurrency('PEN')" id="rentCurrPenBtn" class="px-2 py-0.5 rounded font-bold transition bg-white text-amber-700 shadow-xs">PEN S/</button>
+                  <button type="button" onclick="setRentCurrency('USD')" id="rentCurrUsdBtn" class="px-2 py-0.5 rounded font-semibold text-slate-600 transition">USD $</button>
+                </div>
+              </label>
+              <div class="relative">
+                <span id="rentCurrencySymbol" class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">S/</span>
+                <input type="number" id="rentMonthlyAmount" value="2500" min="0" step="50" oninput="triggerCalculations()"
+                  class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+              </div>
+              <p id="rentConvertedPreview" class="text-[11px] text-slate-500 mt-1">En Soles: S/ 2,500.00 / mes</p>
+            </div>
+
+            <!-- Autovalúo del Predio Arrendado -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+                <span>Valor de Autovalúo del Predio *</span>
+                <span class="text-xs text-slate-400">En Soles (PEN)</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">S/</span>
+                <input type="number" id="rentAutovaluo" value="220000" min="0" step="500" oninput="triggerCalculations()"
+                  class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">Base para la presunción de renta mínima legal anual (6%).</p>
+            </div>
+
+            <!-- TC para Alquiler -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex justify-between">
+                <span>Tipo de Cambio Aplicable *</span>
+                <span class="text-xs text-slate-400">SBS</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-bold text-xs">S/</span>
+                <input type="number" id="rentTc" value="3.750" min="1" step="0.001" oninput="triggerCalculations()"
+                  class="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg input-focus-ring font-mono font-bold text-slate-800">
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">Para contratos pactados en moneda extranjera.</p>
+            </div>
+          </div>
+
+          <!-- Alerta de Presunción Legal 6% -->
+          <div id="rent6PercentAlert" class="hidden p-4 bg-amber-50 border border-amber-300 rounded-xl">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg mt-0.5"></i>
+              <div class="text-xs text-amber-900 space-y-1">
+                <p class="font-bold">Advertencia Legal: Alquiler inferior a la Renta Mínima Presunta (Art. 23 Ley IR)</p>
+                <p>El alquiler anual pactado (<strong id="rentAnnualPactado" class="font-mono">S/ 0.00</strong>) es menor al <strong>6% del Autovalúo</strong> (<strong id="rentFictaMinima" class="font-mono">S/ 0.00</strong>). En la Declaración Jurada Anual, SUNAT exigirá regularizar la diferencia sobre la renta ficta presunta.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Navigation buttons -->
+      <div class="flex justify-between items-center pt-2">
+        <button onclick="goToStep(2)" class="text-slate-600 hover:text-slate-800 text-sm font-medium flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i> Modificar Modo de Operación
+        </button>
+        <button onclick="goToStep(4)" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm shadow flex items-center gap-2 transition">
+          Ver Liquidación y Descargar PDF <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- PASO 4: CUADROS ESTRUCTURADOS & PDF        -->
+    <!-- ========================================== -->
+    <section id="stepSection-4" class="space-y-6 hidden">
+      
+      <!-- Top Action Toolbar -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2">
+            <i class="fa-solid fa-file-invoice text-blue-600"></i> Liquidación Tributaria Formal
+          </h2>
+          <p class="text-xs text-slate-500">Valores estructurados en tablas corporativas con desglose legal detallado.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- PDF Export Mode Selector -->
+          <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-300 text-xs">
+            <span class="text-slate-500 px-2 font-medium">Exportar:</span>
+            <select id="pdfExportChoice" class="bg-white border-0 text-xs font-semibold rounded py-1 px-2.5 focus:ring-0">
+              <option value="both">Ambos Cuadros (Integral)</option>
+              <option value="alcabala">Solo Alcabala (Comprador)</option>
+              <option value="renta">Solo Renta 2da (Vendedor)</option>
+              <option value="renta1">Solo Renta 1ra (Alquiler)</option>
+            </select>
+          </div>
+
+          <button onclick="saveCurrentSimulation()" class="bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar en Historial
+          </button>
+
+          <button onclick="generateStructuredPDF()" class="bg-brand-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md flex items-center gap-2 transition">
+            <i class="fa-solid fa-file-pdf text-rose-200 text-sm"></i> Descargar Liquidación en PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- CUADRO 1: RESUMEN DE ENCABEZADO Y DATOS GENERALES -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="table-header px-4 py-2.5 flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-table-list"></i> CUADRO 1: DATOS GENERALES Y PARÁMETROS DEL INMUEBLE
+          </span>
+          <span class="text-[11px] text-blue-200">Emisión: <span id="summaryDateBadge"></span></span>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left text-slate-700 zebra-striping">
+            <thead class="bg-slate-100 text-slate-600 uppercase font-semibold border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-2.5">Cliente / Contribuyente</th>
+                <th class="px-4 py-2.5">Inmueble / Proyecto</th>
+                <th class="px-4 py-2.5">Tipo Propiedad</th>
+                <th class="px-4 py-2.5 text-center">% Part.</th>
+                <th class="px-4 py-2.5 text-right">UIT Aplicada</th>
+                <th class="px-4 py-2.5 text-right">T.C. SBS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="px-4 py-3 font-bold text-slate-900" id="tableClientName">-</td>
+                <td class="px-4 py-3 font-medium" id="tablePropertyAddress">-</td>
+                <td class="px-4 py-3"><span id="tablePropertyType" class="bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded border border-blue-200">-</span></td>
+                <td class="px-4 py-3 text-center font-mono font-bold" id="tableParticipation">-</td>
+                <td class="px-4 py-3 text-right font-mono font-semibold" id="tableUit">-</td>
+                <td class="px-4 py-3 text-right font-mono font-semibold" id="tableTc">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CUADRO 2: LIQUIDACIÓN ALCABALA (SAT) -->
+      <div id="resultTableAlcabalaBlock" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="table-header px-4 py-2.5 flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-scale-balanced"></i> CUADRO 2: LIQUIDACIÓN DE IMPUESTO DE ALCABALA (COMPRADOR - SAT / MUNICIPAL)
+          </span>
+          <span class="text-[11px] bg-blue-500/40 text-blue-100 px-2 py-0.5 rounded font-mono">TASA: 3%</span>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left zebra-striping">
+            <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-2.5 w-1/3">Concepto / Paso del Cálculo</th>
+                <th class="px-4 py-2.5 w-1/3">Detalle / Base Legal</th>
+                <th class="px-4 py-2.5 text-right w-1/3">Importe en Soles (S/)</th>
+              </tr>
+            </thead>
+            <tbody id="alcabalaTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CUADRO 3: LIQUIDACIÓN RENTA 2DA CATEGORÍA (SUNAT) -->
+      <div id="resultTableRenta2Block" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="table-header px-4 py-2.5 flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-money-bill-trend-up"></i> CUADRO 3: LIQUIDACIÓN DE IMPUESTO A LA RENTA 2DA CATEGORÍA (VENDEDOR - SUNAT)
+          </span>
+          <span class="text-[11px] bg-emerald-600/50 text-emerald-100 px-2 py-0.5 rounded font-mono">TASA: 5%</span>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left zebra-striping">
+            <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-2.5 w-1/3">Concepto / Paso del Cálculo</th>
+                <th class="px-4 py-2.5 w-1/3">Factor / Detalle Aplicado</th>
+                <th class="px-4 py-2.5 text-right w-1/3">Importe en Soles (S/)</th>
+              </tr>
+            </thead>
+            <tbody id="renta2TableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CUADRO 4: LIQUIDACIÓN RENTA 1RA CATEGORÍA (ALQUILER) -->
+      <div id="resultTableRenta1Block" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hidden">
+        <div class="table-header px-4 py-2.5 flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-key"></i> CUADRO 4: LIQUIDACIÓN DE RENTA DE 1RA CATEGORÍA (ARRENDAMIENTO - SUNAT)
+          </span>
+          <span class="text-[11px] bg-amber-600/50 text-amber-100 px-2 py-0.5 rounded font-mono">TASA: 5% MENSUAL</span>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left zebra-striping">
+            <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-2.5 w-1/3">Concepto / Periodo</th>
+                <th class="px-4 py-2.5 w-1/3">Base Imponible / Criterio SUNAT</th>
+                <th class="px-4 py-2.5 text-right w-1/3">Importe en Soles (S/)</th>
+              </tr>
+            </thead>
+            <tbody id="renta1TableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Disclaimer & Adviser Box -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div>
+            <p class="font-bold text-slate-800" id="summaryAgentNameText">-</p>
+            <p id="summaryAgentContactText">-</p>
+          </div>
+        </div>
+        <p class="max-w-xl text-[11px] text-slate-400">
+          <strong>Nota Legal / Descargo:</strong> La presente liquidación es de carácter referencial basada en la Ley de Tributación Municipal y Ley del Impuesto a la Renta de la República del Perú. No sustituye la determinación definitiva realizada por la administración tributaria (SUNAT / SAT).
+        </p>
+      </div>
+
+      <!-- Action buttons bottom -->
+      <div class="flex justify-between items-center pt-2">
+        <button onclick="goToStep(3)" class="text-slate-600 hover:text-slate-800 text-sm font-medium flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i> Modificar Valores y Parámetros
+        </button>
+        <button onclick="generateStructuredPDF()" class="bg-brand-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-lg text-sm shadow flex items-center gap-2 transition">
+          <i class="fa-solid fa-file-pdf"></i> Descargar Documento Oficial en PDF
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+      <p>© 2026 Calculo Carlos • Sistema Tributario Inmobiliario Profesional</p>
+      <p class="flex items-center gap-3">
+        <span>Normativa MEF / SAT / SUNAT</span>
+        <span>•</span>
+        <span>UIT 2026: S/ 5,500</span>
+      </p>
+    </div>
+  </footer>
+
+  <!-- MODAL: HISTORIAL DE SIMULACIONES -->
+  <div id="historyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+      <div class="bg-brand-900 text-white px-5 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left text-blue-400"></i>
+          <h3 class="text-sm font-bold">Historial de Liquidaciones Guardadas</h3>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-slate-300 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto flex-1 space-y-3" id="historyListContainer">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-between items-center text-xs">
+        <button onclick="clearAllHistory()" class="text-rose-600 hover:text-rose-800 font-semibold">
+          <i class="fa-solid fa-trash-can"></i> Borrar Todo el Historial
+        </button>
+        <button onclick="closeHistoryModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded font-semibold">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-lg shadow-xl border border-slate-700 flex items-center gap-2 pointer-events-none">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">Acción completada</span>
+  </div>
+
+  <!-- JAVASCRIPT APP LOGIC -->
+  <script>
+    /* ====================================================================
+       TABLA OFICIAL DE ÍNDICES DE CORRECCIÓN MONETARIA (ICM - MEF)
+       Aplica sobre costo en Soles según año de adquisición
+       ==================================================================== */
+    const OFFICIAL_ICM_TABLE = {
+      2026: 1.00,
+      2025: 1.01,
+      2024: 1.02,
+      2023: 1.04,
+      2022: 1.08,
+      2021: 1.16,
+      2020: 1.23,
+      2019: 1.26,
+      2018: 1.28,
+      2017: 1.31,
+      2016: 1.35,
+      2015: 1.40,
+      2014: 1.45,
+      2013: 1.50,
+      2012: 1.54,
+      2011: 1.59,
+      2010: 1.66,
+      2009: 1.70,
+      2008: 1.71,
+      2007: 1.82,
+      2006: 1.89,
+      2005: 1.92,
+      2004: 1.95
+    };
+
+    // State Variables
+    let currentStep = 1;
+    let currentOperationMode = 'full'; // 'full' | 'alcabala' | 'renta2' | 'renta1'
+    let alcabalaCurrency = 'PEN';
+    let rentaSaleCurrency = 'PEN';
+    let rentaAcqCurrency = 'USD';
+    let rentCurrency = 'PEN';
+    let customLogoBase64 = null;
+
+    // Calculation Results Cache
+    let calcResults = {
+      alcabala: {},
+      renta2: {},
+      renta1: {}
+    };
+
+    // Initialize UI on load
+    document.addEventListener('DOMContentLoaded', () => {
+      populateAcqYearDropdown();
+      selectMode('full');
+      syncGlobalTcToInputs();
+      triggerCalculations();
+      updateDateBadges();
+    });
+
+    function updateDateBadges() {
+      const now = new Date();
+      const formatted = now.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      document.getElementById('summaryDateBadge').innerText = formatted;
+    }
+
+    function populateAcqYearDropdown() {
+      const select = document.getElementById('rentaAcqYear');
+      select.innerHTML = '';
+      for (let y = 2026; y >= 2004; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = `${y} (ICM: ${OFFICIAL_ICM_TABLE[y].toFixed(2)})`;
+        if (y === 2018) opt.selected = true; // default year
+        select.appendChild(opt);
+      }
+      handleYearChange(2018);
+    }
+
+    function handleYearChange(year) {
+      const factor = OFFICIAL_ICM_TABLE[year] || 1.00;
+      document.getElementById('rentaIcmFactor').value = factor.toFixed(2);
+      triggerCalculations();
+    }
+
+    /* ====================================================================
+       STEP NAVIGATION (WIZARD)
+       ==================================================================== */
+    function goToStep(stepNumber) {
+      currentStep = stepNumber;
+
+      for (let s = 1; s <= 4; s++) {
+        const section = document.getElementById(`stepSection-${s}`);
+        const badge = document.getElementById(`stepBadge-${s}`);
+        const connector = document.getElementById(`stepConnector-${s}`);
+
+        if (s === stepNumber) {
+          section.classList.remove('hidden');
+          badge.className = 'w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow';
+        } else if (s < stepNumber) {
+          section.classList.add('hidden');
+          badge.className = 'w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow';
+          badge.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+        } else {
+          section.classList.add('hidden');
+          badge.className = 'w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm';
+          badge.innerText = s;
+        }
+
+        if (connector) {
+          connector.className = s < stepNumber ? 'h-0.5 w-8 sm:w-16 bg-emerald-500' : 'h-0.5 w-8 sm:w-16 bg-slate-200';
+        }
+      }
+
+      // If entering step 4, refresh result tables
+      if (stepNumber === 4) {
+        renderResultTables();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ====================================================================
+       MODE SELECTION
+       ==================================================================== */
+    function selectMode(mode) {
+      currentOperationMode = mode;
+      
+      const cardIds = ['full', 'alcabala', 'renta2', 'renta1'];
+      cardIds.forEach(m => {
+        const card = document.getElementById(`modeCard-${m}`);
+        if (m === mode) {
+          card.classList.add('border-blue-600', 'bg-blue-50/40', 'ring-2', 'ring-blue-500/20');
+          card.classList.remove('border-slate-200');
+        } else {
+          card.classList.remove('border-blue-600', 'bg-blue-50/40', 'ring-2', 'ring-blue-500/20');
+          card.classList.add('border-slate-200');
+        }
+      });
+
+      // Show/hide modules in step 3
+      const alcMod = document.getElementById('moduleAlcabalaContainer');
+      const ren2Mod = document.getElementById('moduleRenta2Container');
+      const ren1Mod = document.getElementById('moduleRenta1Container');
+
+      const exportChoice = document.getElementById('pdfExportChoice');
+
+      if (mode === 'full') {
+        alcMod.classList.remove('hidden');
+        ren2Mod.classList.remove('hidden');
+        ren1Mod.classList.add('hidden');
+        exportChoice.value = 'both';
+      } else if (mode === 'alcabala') {
+        alcMod.classList.remove('hidden');
+        ren2Mod.classList.add('hidden');
+        ren1Mod.classList.add('hidden');
+        exportChoice.value = 'alcabala';
+      } else if (mode === 'renta2') {
+        alcMod.classList.add('hidden');
+        ren2Mod.classList.remove('hidden');
+        ren1Mod.classList.add('hidden');
+        exportChoice.value = 'renta';
+      } else if (mode === 'renta1') {
+        alcMod.classList.add('hidden');
+        ren2Mod.classList.add('hidden');
+        ren1Mod.classList.remove('hidden');
+        exportChoice.value = 'renta1';
+      }
+
+      triggerCalculations();
+    }
+
+    /* ====================================================================
+       CURRENCY TOGGLES
+       ==================================================================== */
+    function setAlcabalaCurrency(curr) {
+      alcabalaCurrency = curr;
+      const penBtn = document.getElementById('alcabalaCurrPenBtn');
+      const usdBtn = document.getElementById('alcabalaCurrUsdBtn');
+      const sym = document.getElementById('alcabalaCurrencySymbol');
+
+      if (curr === 'PEN') {
+        penBtn.className = 'px-2 py-0.5 rounded font-bold transition bg-white text-blue-700 shadow-xs';
+        usdBtn.className = 'px-2 py-0.5 rounded font-semibold text-slate-600 transition';
+        sym.innerText = 'S/';
+      } else {
+        usdBtn.className = 'px-2 py-0.5 rounded font-bold transition bg-white text-blue-700 shadow-xs';
+        penBtn.className = 'px-2 py-0.5 rounded font-semibold text-slate-600 transition';
+        sym.innerText = '$';
+      }
+      triggerCalculations();
+    }
+
+    function setRentaSaleCurrency(curr) {
+      rentaSaleCurrency = curr;
+      const penBtn = document.getElementById('rentaSalePenBtn');
+      const usdBtn = document.getElementById('rentaSaleUsdBtn');
+      const sym = document.getElementById('rentaSaleCurrencySymbol');
+
+      if (curr === 'PEN') {
+        penBtn.className = 'px-2 py-0.5 rounded font-bold transition bg-white text-emerald-700 shadow-xs';
+        usdBtn.className = 'px-2 py-0.5 rounded font-semibold text-slate-600 transition';
+        sym.innerText = 'S/';
+      } else {
+        usdBtn.className = 'px-2 py-0.5 rounded font-bold transition bg-white text-emerald-700 shadow-xs';
+        penBtn.className = 'px-2 py-0.5 rounded font-semibold text-slate-600 transition';
+        sym.innerText = '$';
+      }
+      triggerCalculations();
+    }
+
+    function setRentaAcqCurrency(curr) {
+      rentaAcqCurrency = curr;
+      const penBtn = document.getElementById('rentaAcqPenBtn');
+      const usdBtn = document.getElementById('rentaAcqUsdBtn');
+      const sym = document.getElementById('rentaAcqCurrencySymbol');
+      const histTcCont = document.getElementById('historicalTcContainer');
+
+      if (curr === 'PEN') {
+        penBtn.className = 'px-2 py-0.5 rounded font-bold transition bg-white text-blue-700 shadow-xs';
+        usdBtn.className = 'px-2 py-0.5 rounded font-semibold text-slate-600 transition';
+        sym.innerText = 'S/';
+        histTcCont.classList.add('hidden');
+      } else {
+        usdBtn.className = 'px-2 py-0.5 rounded font-bold transition bg-white text-blue-700 shadow-xs';
+        penBtn.className = 'px-2 py-0.5 rounded font-semibold text-slate-600 transition';
+        sym.innerText = '$';
+        histTcCont.classList.remove('hidden');
+      }
+      triggerCalculations();
+    }
+
+    function setRentCurrency(curr) {
+      rentCurrency = curr;
+      const penBtn = document.getElementById('rentCurrPenBtn');
+      const usdBtn = document.getElementById('rentCurrUsdBtn');
+      const sym = document.getElementById('rentCurrencySymbol');
+
+      if (curr === 'PEN') {
+        penBtn.className = 'px-2 py-0.5 rounded font-bold transition bg-white text-amber-700 shadow-xs';
+        usdBtn.className = 'px-2 py-0.5 rounded font-semibold text-slate-600 transition';
+        sym.innerText = 'S/';
+      } else {
+        usdBtn.className = 'px-2 py-0.5 rounded font-bold transition bg-white text-amber-700 shadow-xs';
+        penBtn.className = 'px-2 py-0.5 rounded font-semibold text-slate-600 transition';
+        sym.innerText = '$';
+      }
+      triggerCalculations();
+    }
+
+    function syncGlobalTcToInputs() {
+      const tc = parseFloat(document.getElementById('exchangeRate').value) || 3.75;
+      document.getElementById('rentaSaleTc').value = tc.toFixed(3);
+      document.getElementById('rentTc').value = tc.toFixed(3);
+    }
+
+    function updateParticipationDisplay(val) {
+      const num = parseFloat(val) || 100;
+      document.getElementById('participationDisplay').innerText = num.toFixed(2) + '%';
+    }
+
+    function syncAlcabalaPriceToRenta() {
+      const alcPrice = parseFloat(document.getElementById('alcabalaSalePrice').value) || 0;
+      setRentaSaleCurrency(alcabalaCurrency);
+      document.getElementById('rentaSalePrice').value = alcPrice;
+      showToast('Precio sincronizado desde Alcabala', 'fa-check');
+      triggerCalculations();
+    }
+
+    function toggleConstructorOptions() {
+      const sw = document.getElementById('alcabalaConstructorSwitch').checked;
+      const panel = document.getElementById('constructorOptionsPanel');
+      if (sw) {
+        panel.classList.remove('hidden');
+      } else {
+        panel.classList.add('hidden');
+      }
+      triggerCalculations();
+    }
+
+    function handleGratuitoSwitch(isChecked) {
+      if (isChecked) {
+        // Offer setting acquisition to zero
+        document.getElementById('rentaAcqPrice').value = 0;
+        showToast('Adquisición gratuita: Costo computable fijado en S/ 0 según D.Leg. 1120', 'fa-info-circle');
+      }
+      triggerCalculations();
+    }
+
+    /* ====================================================================
+       LOGO UPLOAD & PREVIEW
+       ==================================================================== */
+    function handleLogoUpload(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          customLogoBase64 = e.target.result;
+          document.getElementById('logoPreviewImg').src = customLogoBase64;
+          document.getElementById('logoPreviewContainer').classList.remove('hidden');
+          document.getElementById('logoUploadText').innerText = file.name.substring(0, 18) + '...';
+          showToast('Logotipo cargado correctamente', 'fa-check');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeLogo() {
+      customLogoBase64 = null;
+      document.getElementById('logoFileInput').value = '';
+      document.getElementById('logoPreviewImg').src = '';
+      document.getElementById('logoPreviewContainer').classList.add('hidden');
+      document.getElementById('logoUploadText').innerText = 'Seleccionar imagen de logo...';
+      showToast('Logo removido', 'fa-trash');
+    }
+
+    /* ====================================================================
+       CORE CALCULATION ENGINE
+       ==================================================================== */
+    function triggerCalculations() {
+      const uit = parseFloat(document.getElementById('uitValue').value) || 5500;
+      const tcGlobal = parseFloat(document.getElementById('exchangeRate').value) || 3.75;
+      const participationPct = (parseFloat(document.getElementById('participationRate').value) || 100) / 100;
+
+      // Update 10 UIT preview
+      document.getElementById('deduccionUitPreview').innerText = 'S/ ' + formatNumber(uit * 10);
+
+      /* -------------------------------------------------------------
+         1. CÁLCULO DE ALCABALA
+         ------------------------------------------------------------- */
+      const alcPriceRaw = parseFloat(document.getElementById('alcabalaSalePrice').value) || 0;
+      const alcAutovaluo = parseFloat(document.getElementById('alcabalaAutovaluo').value) || 0;
+      const alcIpm = parseFloat(document.getElementById('alcabalaIpm').value) || 1.00;
+      
+      const isConstructor = document.getElementById('alcabalaConstructorSwitch').checked;
+      const constructorMode = document.querySelector('input[name="constructorMode"]:checked')?.value || 'total_exempt';
+      const landPct = (parseFloat(document.getElementById('alcabalaLandPercentage').value) || 20) / 100;
+
+      // Precio en Soles
+      let alcPriceSoles = alcabalaCurrency === 'USD' ? alcPriceRaw * tcGlobal : alcPriceRaw;
+      document.getElementById('alcabalaConvertedPreview').innerText = alcabalaCurrency === 'USD' 
+        ? `Equivalente en Soles: S/ ${formatNumber(alcPriceSoles)} (TC: ${tcGlobal.toFixed(3)})` 
+        : `Monto directo en Soles: S/ ${formatNumber(alcPriceSoles)}`;
+
+      // Autovalúo Ajustado por IPM
+      let autovaluoAjustado = alcAutovaluo * alcIpm;
+
+      let baseComparacion = 0;
+      let alcabalaDeduccion = 10 * uit;
+      let alcabalaBaseImponible = 0;
+      let alcabalaTaxFinal = 0;
+      let alcabalaDetalle = '';
+
+      if (isConstructor && constructorMode === 'total_exempt') {
+        alcabalaTaxFinal = 0;
+        alcabalaBaseImponible = 0;
+        alcabalaDetalle = 'Inafecto Total (Primera venta por empresa constructora - Art. 22 LTM)';
+      } else {
+        if (isConstructor && constructorMode === 'land_only') {
+          // Solo paga sobre el valor del terreno
+          const terrenoVenta = alcPriceSoles * landPct;
+          const terrenoAutovaluo = autovaluoAjustado * landPct;
+          baseComparacion = Math.max(terrenoVenta, terrenoAutovaluo);
+          alcabalaDetalle = `Primera venta constructora (Solo terreno ${landPct * 100}%: Mayor entre Venta S/ ${formatNumber(terrenoVenta)} y Autovalúo S/ ${formatNumber(terrenoAutovaluo)})`;
+        } else {
+          baseComparacion = Math.max(alcPriceSoles, autovaluoAjustado);
+          alcabalaDetalle = `Mayor valor entre Venta (S/ ${formatNumber(alcPriceSoles)}) y Autovalúo Ajustado (S/ ${formatNumber(autovaluoAjustado)})`;
+        }
+
+        alcabalaBaseImponible = Math.max(0, baseComparacion - alcabalaDeduccion);
+        alcabalaTaxFinal = alcabalaBaseImponible * 0.03 * participationPct;
+      }
+
+      const alcabalaTaxUsd = tcGlobal > 0 ? alcabalaTaxFinal / tcGlobal : 0;
+
+      calcResults.alcabala = {
+        salePriceRaw: alcPriceRaw,
+        currency: alcabalaCurrency,
+        salePriceSoles: alcPriceSoles,
+        autovaluoOriginal: alcAutovaluo,
+        ipm: alcIpm,
+        autovaluoAjustado: autovaluoAjustado,
+        baseComparacion: baseComparacion,
+        deduccion10Uit: alcabalaDeduccion,
+        baseImponible: alcabalaBaseImponible,
+        taxSoles: alcabalaTaxFinal,
+        taxUsd: alcabalaTaxUsd,
+        isConstructor: isConstructor,
+        constructorMode: constructorMode,
+        landPct: landPct,
+        detalle: alcabalaDetalle,
+        participationPct: participationPct
+      };
+
+      // Quick preview UI
+      document.getElementById('alcabalaQuickBase').innerText = `S/ ${formatNumber(alcabalaBaseImponible)}`;
+      document.getElementById('alcabalaQuickDeduction').innerText = `-S/ ${formatNumber(alcabalaDeduccion)}`;
+      document.getElementById('alcabalaQuickTotal').innerText = `S/ ${formatNumber(alcabalaTaxFinal)} (US$ ${formatNumber(alcabalaTaxUsd)})`;
+
+
+      /* -------------------------------------------------------------
+         2. CÁLCULO DE RENTA DE 2DA CATEGORÍA
+         ------------------------------------------------------------- */
+      const rSaleRaw = parseFloat(document.getElementById('rentaSalePrice').value) || 0;
+      const rSaleTc = parseFloat(document.getElementById('rentaSaleTc').value) || tcGlobal;
+      const rAcqRaw = parseFloat(document.getElementById('rentaAcqPrice').value) || 0;
+      const rHistTc = parseFloat(document.getElementById('rentaHistoricalTc').value) || 3.30;
+      const rIcm = parseFloat(document.getElementById('rentaIcmFactor').value) || 1.00;
+      const rImprovements = parseFloat(document.getElementById('rentaImprovements').value) || 0;
+
+      const swPre2004 = document.getElementById('switchPre2004').checked;
+      const swCasaHab = document.getElementById('switchCasaHabitacion').checked;
+      const swGratuito = document.getElementById('switchGratuito').checked;
+
+      // Venta en Soles
+      const rSaleSoles = rentaSaleCurrency === 'USD' ? rSaleRaw * rSaleTc : rSaleRaw;
+      document.getElementById('rentaSaleConvertedPreview').innerText = rentaSaleCurrency === 'USD'
+        ? `En Soles: S/ ${formatNumber(rSaleSoles)} (TC: ${rSaleTc.toFixed(3)})`
+        : `Monto directo en Soles: S/ ${formatNumber(rSaleSoles)}`;
+
+      // Compra en Soles Históricos
+      const rAcqSolesHist = rentaAcqCurrency === 'USD' ? rAcqRaw * rHistTc : rAcqRaw;
+      document.getElementById('rentaAcqConvertedPreview').innerText = rentaAcqCurrency === 'USD'
+        ? `Costo Histórico Soles: S/ ${formatNumber(rAcqSolesHist)} (TC Hist: ${rHistTc.toFixed(3)})`
+        : `Costo Histórico Soles: S/ ${formatNumber(rAcqSolesHist)}`;
+
+      // Costo Actualizado con ICM + Mejoras
+      const rCostoActualizadoIcm = (rAcqSolesHist * rIcm) + rImprovements;
+      const rIncrementoIcm = (rAcqSolesHist * rIcm) - rAcqSolesHist;
+
+      // Ganancia de Capital
+      const rGananciaCapital = rSaleSoles - rCostoActualizadoIcm;
+
+      let rTaxFinal = 0;
+      let rIsExempt = false;
+      let rExemptReason = '';
+
+      if (swPre2004) {
+        rIsExempt = true;
+        rExemptReason = 'INAFECTO POR LEY: Adquirido antes del 01/01/2004 (35ta Disp. Transitoria Ley del IR).';
+      } else if (swCasaHab) {
+        rIsExempt = true;
+        rExemptReason = 'EXONERADO POR LEY: Inmueble califica como Casa-Habitación (Art. 2 Ley del IR).';
+      } else if (rGananciaCapital <= 0) {
+        rTaxFinal = 0;
+        rExemptReason = 'PÉRDIDA O SIN GANANCIA DE CAPITAL: Costo computable supera o iguala el precio de venta.';
+      } else {
+        rTaxFinal = rGananciaCapital * 0.05 * participationPct;
+      }
+
+      const rTaxUsd = rSaleTc > 0 ? rTaxFinal / rSaleTc : 0;
+
+      // Toggle exempt banner
+      const exemptBanner = document.getElementById('rentaExemptBanner');
+      if (rIsExempt) {
+        exemptBanner.classList.remove('hidden');
+        exemptBanner.querySelector('span').innerText = rExemptReason;
+      } else {
+        exemptBanner.classList.add('hidden');
+      }
+
+      calcResults.renta2 = {
+        salePriceRaw: rSaleRaw,
+        saleCurrency: rentaSaleCurrency,
+        saleTc: rSaleTc,
+        saleSoles: rSaleSoles,
+        acqPriceRaw: rAcqRaw,
+        acqCurrency: rentaAcqCurrency,
+        historicalTc: rHistTc,
+        acqSolesHist: rAcqSolesHist,
+        icmFactor: rIcm,
+        incrementoIcm: rIncrementoIcm,
+        costoActualizadoIcm: rCostoActualizadoIcm,
+        improvements: rImprovements,
+        gananciaCapital: rGananciaCapital,
+        taxSoles: rTaxFinal,
+        taxUsd: rTaxUsd,
+        isExempt: rIsExempt,
+        exemptReason: rExemptReason,
+        participationPct: participationPct
+      };
+
+      // Quick preview UI
+      document.getElementById('rentaQuickCosto').innerText = `S/ ${formatNumber(rCostoActualizadoIcm)}`;
+      document.getElementById('rentaQuickGain').innerText = `S/ ${formatNumber(Math.max(0, rGananciaCapital))}`;
+      document.getElementById('rentaQuickTotal').innerText = rIsExempt ? 'S/ 0.00 (Exonerado)' : `S/ ${formatNumber(rTaxFinal)} (US$ ${formatNumber(rTaxUsd)})`;
+
+
+      /* -------------------------------------------------------------
+         3. CÁLCULO DE RENTA DE 1RA CATEGORÍA (ALQUILERES)
+         ------------------------------------------------------------- */
+      const rentRaw = parseFloat(document.getElementById('rentMonthlyAmount').value) || 0;
+      const rentAutovaluo = parseFloat(document.getElementById('rentAutovaluo').value) || 0;
+      const rentTc = parseFloat(document.getElementById('rentTc').value) || tcGlobal;
+
+      const rentMonthlySoles = rentCurrency === 'USD' ? rentRaw * rentTc : rentRaw;
+      document.getElementById('rentConvertedPreview').innerText = rentCurrency === 'USD'
+        ? `En Soles: S/ ${formatNumber(rentMonthlySoles)} / mes (TC: ${rentTc.toFixed(3)})`
+        : `Monto directo en Soles: S/ ${formatNumber(rentMonthlySoles)} / mes`;
+
+      const rentTaxMonthly = rentMonthlySoles * 0.05 * participationPct;
+      const rentTaxAnnual = rentTaxMonthly * 12;
+      const rentAnnualSoles = rentMonthlySoles * 12;
+      const rentaFictaMinima = rentAutovaluo * 0.06;
+
+      const rentAlert = document.getElementById('rent6PercentAlert');
+      if (rentAnnualSoles < rentaFictaMinima && rentAutovaluo > 0) {
+        rentAlert.classList.remove('hidden');
+        document.getElementById('rentAnnualPactado').innerText = `S/ ${formatNumber(rentAnnualSoles)}`;
+        document.getElementById('rentFictaMinima').innerText = `S/ ${formatNumber(rentaFictaMinima)}`;
+      } else {
+        rentAlert.classList.add('hidden');
+      }
+
+      calcResults.renta1 = {
+        rentMonthlyRaw: rentRaw,
+        currency: rentCurrency,
+        rentTc: rentTc,
+        rentMonthlySoles: rentMonthlySoles,
+        taxMonthlySoles: rentTaxMonthly,
+        taxMonthlyUsd: rentTc > 0 ? rentTaxMonthly / rentTc : 0,
+        rentAnnualSoles: rentAnnualSoles,
+        taxAnnualSoles: rentTaxAnnual,
+        taxAnnualUsd: rentTc > 0 ? rentTaxAnnual / rentTc : 0,
+        autovaluo: rentAutovaluo,
+        rentaFictaMinima: rentaFictaMinima,
+        isBelowPresumption: rentAnnualSoles < rentaFictaMinima
+      };
+    }
+
+    /* ====================================================================
+       RENDER STEP 4 STRUCTURED TABLES IN UI
+       ==================================================================== */
+    function renderResultTables() {
+      triggerCalculations();
+
+      const clientName = document.getElementById('clientName').value || 'Cliente General';
+      const propertyAddress = document.getElementById('propertyAddress').value || 'Sin dirección especificada';
+      const propertyType = document.getElementById('propertyType').value;
+      const participation = document.getElementById('participationRate').value || '100';
+      const uit = parseFloat(document.getElementById('uitValue').value) || 5500;
+      const tc = parseFloat(document.getElementById('exchangeRate').value) || 3.75;
+      const agentName = document.getElementById('agentName').value || 'Asesor Inmobiliario';
+      const agentPhone = document.getElementById('agentPhone').value || '';
+      const agentAgency = document.getElementById('agentAgency').value || '';
+
+      // Populate Cuadro 1
+      document.getElementById('tableClientName').innerText = clientName;
+      document.getElementById('tablePropertyAddress').innerText = propertyAddress;
+      document.getElementById('tablePropertyType').innerText = propertyType;
+      document.getElementById('tableParticipation').innerText = `${parseFloat(participation).toFixed(2)}%`;
+      document.getElementById('tableUit').innerText = `S/ ${formatNumber(uit)}`;
+      document.getElementById('tableTc').innerText = `S/ ${tc.toFixed(3)}`;
+
+      // Adviser footer box
+      document.getElementById('summaryAgentNameText').innerText = agentName + (agentAgency ? ` • ${agentAgency}` : '');
+      document.getElementById('summaryAgentContactText').innerText = agentPhone ? `Contacto / WhatsApp: ${agentPhone}` : 'Asesoría Inmobiliaria Profesional';
+
+      // Visibility based on mode
+      const alcBlock = document.getElementById('resultTableAlcabalaBlock');
+      const ren2Block = document.getElementById('resultTableRenta2Block');
+      const ren1Block = document.getElementById('resultTableRenta1Block');
+
+      if (currentOperationMode === 'full') {
+        alcBlock.classList.remove('hidden');
+        ren2Block.classList.remove('hidden');
+        ren1Block.classList.add('hidden');
+      } else if (currentOperationMode === 'alcabala') {
+        alcBlock.classList.remove('hidden');
+        ren2Block.classList.add('hidden');
+        ren1Block.classList.add('hidden');
+      } else if (currentOperationMode === 'renta2') {
+        alcBlock.classList.add('hidden');
+        ren2Block.classList.remove('hidden');
+        ren1Block.classList.add('hidden');
+      } else if (currentOperationMode === 'renta1') {
+        alcBlock.classList.add('hidden');
+        ren2Block.classList.add('hidden');
+        ren1Block.classList.remove('hidden');
+      }
+
+      /* ------------------------------------------------------
+         CUADRO 2: CUERPO DE TABLA ALCABALA
+         ------------------------------------------------------ */
+      const rAlc = calcResults.alcabala;
+      const alcBody = document.getElementById('alcabalaTableBody');
+      alcBody.innerHTML = `
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">1. Precio de Transferencia / Venta</td>
+          <td class="px-4 py-2.5 text-slate-500">${rAlc.currency === 'USD' ? `US$ ${formatNumber(rAlc.salePriceRaw)} x TC S/ ${tc.toFixed(3)}` : 'Pactado directamente en Soles'}</td>
+          <td class="px-4 py-2.5 text-right font-mono font-semibold text-slate-800">S/ ${formatNumber(rAlc.salePriceSoles)}</td>
+        </tr>
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">2. Valor de Autovalúo Ajustado (HR/PU)</td>
+          <td class="px-4 py-2.5 text-slate-500">Autovalúo S/ ${formatNumber(rAlc.autovaluoOriginal)} x Factor IPM (${rAlc.ipm.toFixed(3)})</td>
+          <td class="px-4 py-2.5 text-right font-mono font-semibold text-slate-800">S/ ${formatNumber(rAlc.autovaluoAjustado)}</td>
+        </tr>
+        <tr class="border-b border-slate-200 bg-blue-50/30">
+          <td class="px-4 py-2.5 font-bold text-blue-950">3. Base de Comparación (Mayor Valor)</td>
+          <td class="px-4 py-2.5 text-slate-600 font-medium">${rAlc.detalle}</td>
+          <td class="px-4 py-2.5 text-right font-mono font-bold text-blue-950">S/ ${formatNumber(rAlc.baseComparacion)}</td>
+        </tr>
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">4. Deducción Legal Inafecta (-10 UIT)</td>
+          <td class="px-4 py-2.5 text-slate-500">10 x S/ ${formatNumber(uit)} (Art. 25 TUO Ley de Trib. Municipal)</td>
+          <td class="px-4 py-2.5 text-right font-mono font-semibold text-rose-600">-S/ ${formatNumber(rAlc.deduccion10Uit)}</td>
+        </tr>
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">5. Base Imponible Neta</td>
+          <td class="px-4 py-2.5 text-slate-500">Base de Comparación menos 10 UIT (Mínimo S/ 0.00)</td>
+          <td class="px-4 py-2.5 text-right font-mono font-bold text-slate-800">S/ ${formatNumber(rAlc.baseImponible)}</td>
+        </tr>
+        <tr class="border-b border-slate-200 text-[11px] text-slate-500">
+          <td class="px-4 py-2 font-medium">Factor de Participación</td>
+          <td class="px-4 py-2">Porcentaje de acciones y derechos del comprador</td>
+          <td class="px-4 py-2 text-right font-mono">${(rAlc.participationPct * 100).toFixed(2)}%</td>
+        </tr>
+        <tr class="bg-blue-100/80 border-t-2 border-blue-600">
+          <td class="px-4 py-3.5 font-bold text-brand-900 text-sm">TOTAL IMPUESTO DE ALCABALA (3%)</td>
+          <td class="px-4 py-3.5 text-blue-900 font-semibold">Tasa del 3% sobre Base Imponible x % Participación</td>
+          <td class="px-4 py-3.5 text-right font-mono font-black text-brand-900 text-base">
+            S/ ${formatNumber(rAlc.taxSoles)}
+            <span class="block text-xs font-semibold text-blue-700">Equiv. US$ ${formatNumber(rAlc.taxUsd)}</span>
+          </td>
+        </tr>
+      `;
+
+      /* ------------------------------------------------------
+         CUADRO 3: CUERPO DE TABLA RENTA 2DA CATEGORÍA
+         ------------------------------------------------------ */
+      const rRen2 = calcResults.renta2;
+      const ren2Body = document.getElementById('renta2TableBody');
+
+      let exemptRow = '';
+      if (rRen2.isExempt) {
+        exemptRow = `
+          <tr class="bg-emerald-50 border-b border-emerald-200">
+            <td colspan="3" class="px-4 py-3 text-emerald-800 font-bold text-center">
+              <i class="fa-solid fa-circle-check"></i> ${rRen2.exemptReason}
+            </td>
+          </tr>
+        `;
+      }
+
+      ren2Body.innerHTML = `
+        ${exemptRow}
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">1. Costo de Adquisición Original</td>
+          <td class="px-4 py-2.5 text-slate-500">${rRen2.acqCurrency === 'USD' ? `US$ ${formatNumber(rRen2.acqPriceRaw)} al TC Histórico S/ ${rRen2.historicalTc.toFixed(3)}` : 'Adquirido directamente en Soles'}</td>
+          <td class="px-4 py-2.5 text-right font-mono font-semibold text-slate-800">S/ ${formatNumber(rRen2.acqSolesHist)}</td>
+        </tr>
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">2. Reajuste por Corrección Monetaria (ICM MEF)</td>
+          <td class="px-4 py-2.5 text-slate-500">Factor aplicado: ${rRen2.icmFactor.toFixed(2)} (Ajuste por inflación según MEF)</td>
+          <td class="px-4 py-2.5 text-right font-mono font-semibold text-emerald-600">+S/ ${formatNumber(rRen2.incrementoIcm)}</td>
+        </tr>
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">3. Costo de Inversiones / Mejoras Declaradas</td>
+          <td class="px-4 py-2.5 text-slate-500">Mejoras sustentadas con comprobantes de pago fehacientes</td>
+          <td class="px-4 py-2.5 text-right font-mono font-semibold text-slate-800">+S/ ${formatNumber(rRen2.improvements)}</td>
+        </tr>
+        <tr class="border-b border-slate-200 bg-slate-50">
+          <td class="px-4 py-2.5 font-bold text-slate-900">4. Costo Computable Actualizado Total</td>
+          <td class="px-4 py-2.5 text-slate-600 font-medium">Suma de (Costo Histórico x ICM) + Mejoras</td>
+          <td class="px-4 py-2.5 text-right font-mono font-bold text-slate-900">S/ ${formatNumber(rRen2.costoActualizadoIcm)}</td>
+        </tr>
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">5. Precio de Venta Actual en Soles</td>
+          <td class="px-4 py-2.5 text-slate-500">${rRen2.saleCurrency === 'USD' ? `US$ ${formatNumber(rRen2.salePriceRaw)} x TC Venta S/ ${rRen2.saleTc.toFixed(3)}` : 'Venta pactada en Soles'}</td>
+          <td class="px-4 py-2.5 text-right font-mono font-bold text-slate-800">S/ ${formatNumber(rRen2.saleSoles)}</td>
+        </tr>
+        <tr class="border-b border-slate-200 bg-emerald-50/40">
+          <td class="px-4 py-2.5 font-bold text-emerald-950">6. Ganancia de Capital Neta (Utilidad Afecta)</td>
+          <td class="px-4 py-2.5 text-slate-600 font-medium">Precio de Venta menos Costo Computable Actualizado</td>
+          <td class="px-4 py-2.5 text-right font-mono font-bold text-emerald-950">S/ ${formatNumber(Math.max(0, rRen2.gananciaCapital))}</td>
+        </tr>
+        <tr class="border-b border-slate-200 text-[11px] text-slate-500">
+          <td class="px-4 py-2 font-medium">Factor de Participación</td>
+          <td class="px-4 py-2">Porcentaje de acciones y derechos del enajenante</td>
+          <td class="px-4 py-2 text-right font-mono">${(rRen2.participationPct * 100).toFixed(2)}%</td>
+        </tr>
+        <tr class="bg-emerald-100/80 border-t-2 border-emerald-600">
+          <td class="px-4 py-3.5 font-bold text-slate-900 text-sm">TOTAL IMPUESTO A LA RENTA 2DA CAT. (5%)</td>
+          <td class="px-4 py-3.5 text-emerald-900 font-semibold">Tasa del 5% definitiva sobre Ganancia de Capital x % Part.</td>
+          <td class="px-4 py-3.5 text-right font-mono font-black text-slate-900 text-base">
+            S/ ${formatNumber(rRen2.taxSoles)}
+            <span class="block text-xs font-semibold text-emerald-700">Equiv. US$ ${formatNumber(rRen2.taxUsd)}</span>
+          </td>
+        </tr>
+      `;
+
+      /* ------------------------------------------------------
+         CUADRO 4: CUERPO DE TABLA RENTA 1RA CATEGORÍA
+         ------------------------------------------------------ */
+      const rRen1 = calcResults.renta1;
+      const ren1Body = document.getElementById('renta1TableBody');
+      ren1Body.innerHTML = `
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">1. Alquiler Bruto Mensual</td>
+          <td class="px-4 py-2.5 text-slate-500">${rRen1.currency === 'USD' ? `US$ ${formatNumber(rRen1.rentMonthlyRaw)} x TC S/ ${rRen1.rentTc.toFixed(3)}` : 'Pactado directamente en Soles'}</td>
+          <td class="px-4 py-2.5 text-right font-mono font-semibold text-slate-800">S/ ${formatNumber(rRen1.rentMonthlySoles)}</td>
+        </tr>
+        <tr class="border-b border-slate-200 bg-amber-50/50">
+          <td class="px-4 py-2.5 font-bold text-amber-950">2. Pago Mensual a Cuenta (5%)</td>
+          <td class="px-4 py-2.5 text-slate-600 font-medium">Alícuota del 5% sobre el alquiler mensual devengado (SUNAT)</td>
+          <td class="px-4 py-2.5 text-right font-mono font-bold text-amber-950">S/ ${formatNumber(rRen1.taxMonthlySoles)}</td>
+        </tr>
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">3. Proyección Anual (12 Meses)</td>
+          <td class="px-4 py-2.5 text-slate-500">Total ingreso anual proyectado: S/ ${formatNumber(rRen1.rentAnnualSoles)}</td>
+          <td class="px-4 py-2.5 text-right font-mono font-semibold text-slate-800">S/ ${formatNumber(rRen1.taxAnnualSoles)}</td>
+        </tr>
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 font-medium text-slate-800">4. Comparativa Renta Mínima Presunta (6%)</td>
+          <td class="px-4 py-2.5 text-slate-500">6% de Autovalúo S/ ${formatNumber(rRen1.autovaluo)} (Art. 23 Ley IR)</td>
+          <td class="px-4 py-2.5 text-right font-mono font-semibold ${rRen1.isBelowPresumption ? 'text-amber-700 font-bold' : 'text-slate-600'}">S/ ${formatNumber(rRen1.rentaFictaMinima)}</td>
+        </tr>
+        <tr class="bg-amber-100/80 border-t-2 border-amber-600">
+          <td class="px-4 py-3.5 font-bold text-brand-900 text-sm">TOTAL IMPUESTO MENSUAL RENTA 1RA (5%)</td>
+          <td class="px-4 py-3.5 text-amber-900 font-semibold">Tasa del 5% mensual con Guía Pago Fácil SUNAT</td>
+          <td class="px-4 py-3.5 text-right font-mono font-black text-brand-900 text-base">
+            S/ ${formatNumber(rRen1.taxMonthlySoles)}
+            <span class="block text-xs font-semibold text-amber-800">Equiv. US$ ${formatNumber(rRen1.taxMonthlyUsd)} / mes</span>
+          </td>
+        </tr>
+      `;
+    }
+
+    /* ====================================================================
+       PDF EXPORT ENGINE (JSPDF + JSPDF-AUTOTABLE)
+       Estrictamente maquetado en cuadros/tablas formales
+       ==================================================================== */
+    function generateStructuredPDF() {
+      triggerCalculations();
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const clientName = document.getElementById('clientName').value || 'Cliente';
+      const propertyAddress = document.getElementById('propertyAddress').value || 'Inmueble Referencial';
+      const propertyType = document.getElementById('propertyType').value;
+      const participation = document.getElementById('participationRate').value || '100';
+      const uit = parseFloat(document.getElementById('uitValue').value) || 5500;
+      const tc = parseFloat(document.getElementById('exchangeRate').value) || 3.75;
+      const agentName = document.getElementById('agentName').value || 'Carlos Mendoza';
+      const agentPhone = document.getElementById('agentPhone').value || '+51 987 654 321';
+      const agentAgency = document.getElementById('agentAgency').value || 'Prime Real Estate Perú';
+
+      const exportOption = document.getElementById('pdfExportChoice').value; // 'both' | 'alcabala' | 'renta' | 'renta1'
+
+      const dateStr = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      // Colors
+      const primaryNavy = [15, 41, 74];      // #0f294a
+      const accentBlue = [29, 78, 216];      // #1d4ed8
+      const zebraGrey = [248, 250, 252];     // #f8fafc
+      const highlightRow = [238, 242, 255];  // soft indigo/blue
+      const darkText = [30, 41, 59];
+
+      let startY = 14;
+
+      // 1. HEADER CORPORATIVO CON LOGO
+      if (customLogoBase64) {
+        try {
+          doc.addImage(customLogoBase64, 'JPEG', 14, startY, 40, 15);
+        } catch(e) {
+          console.warn('Error rendering custom logo into PDF:', e);
+        }
+      }
+
+      const textStartX = customLogoBase64 ? 60 : 14;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(primaryNavy[0], primaryNavy[1], primaryNavy[2]);
+      doc.text('LIQUIDACIÓN TRIBUTARIA INMOBILIARIA', textStartX, startY + 6);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`República del Perú • Asesoría: ${agentAgency} • Asesor: ${agentName} (${agentPhone})`, textStartX, startY + 11);
+      doc.text(`Fecha de Emisión: ${dateStr} • Valores y Parámetros Oficiales SUNAT / SAT`, textStartX, startY + 15);
+
+      startY += 20;
+
+      // ==================================================================
+      // CUADRO 1: TABLA DE DATOS GENERALES DEL CLIENTE E INMUEBLE
+      // ==================================================================
+      doc.autoTable({
+        startY: startY,
+        head: [['CUADRO 1: DATOS GENERALES Y PARÁMETROS DE LA OPERACIÓN', '', '', '']],
+        body: [
+          [
+            { content: 'Cliente / Contribuyente:', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+            { content: clientName },
+            { content: 'Tipo de Inmueble:', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+            { content: propertyType }
+          ],
+          [
+            { content: 'Ubicación / Proyecto:', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+            { content: propertyAddress },
+            { content: '% Participación:', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+            { content: `${parseFloat(participation).toFixed(2)}% (Acciones y Derechos)` }
+          ],
+          [
+            { content: 'Valor de la UIT:', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+            { content: `S/ ${formatNumber(uit)} (Vigente)` },
+            { content: 'Tipo de Cambio (TC):', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+            { content: `S/ ${tc.toFixed(3)} (SBS Referencial)` }
+          ]
+        ],
+        theme: 'grid',
+        headStyles: {
+          fillColor: primaryNavy,
+          textColor: [255, 255, 255],
+          fontSize: 8.5,
+          fontStyle: 'bold'
+        },
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+          textColor: darkText,
+          lineColor: [203, 213, 225],
+          lineWidth: 0.2
+        },
+        margin: { left: 14, right: 14 }
+      });
+
+      startY = doc.lastAutoTable.finalY + 6;
+
+      // ==================================================================
+      // CUADRO 2: LIQUIDACIÓN IMPUESTO DE ALCABALA (SAT)
+      // ==================================================================
+      if (exportOption === 'both' || exportOption === 'alcabala') {
+        const rAlc = calcResults.alcabala;
+
+        doc.autoTable({
+          startY: startY,
+          head: [
+            [
+              { content: 'CUADRO 2: LIQUIDACIÓN DE IMPUESTO DE ALCABALA (COMPRADOR - SAT / MUNICIPALIDAD)', colSpan: 3, styles: { fillColor: primaryNavy } }
+            ],
+            [
+              { content: 'Concepto / Paso del Cálculo', styles: { halign: 'left', fillColor: [30, 58, 138], textColor: 255 } },
+              { content: 'Detalle / Base Legal', styles: { halign: 'left', fillColor: [30, 58, 138], textColor: 255 } },
+              { content: 'Importe en Soles (S/)', styles: { halign: 'right', fillColor: [30, 58, 138], textColor: 255 } }
+            ]
+          ],
+          body: [
+            ['1. Precio de Transferencia (Venta)', rAlc.currency === 'USD' ? `US$ ${formatNumber(rAlc.salePriceRaw)} (TC: S/ ${tc.toFixed(3)})` : 'Pactado directamente en Soles', { content: `S/ ${formatNumber(rAlc.salePriceSoles)}`, styles: { halign: 'right', fontStyle: 'bold' } }],
+            ['2. Valor de Autovalúo Reajustado', `Autovalúo S/ ${formatNumber(rAlc.autovaluoOriginal)} x IPM ${rAlc.ipm.toFixed(3)}`, { content: `S/ ${formatNumber(rAlc.autovaluoAjustado)}`, styles: { halign: 'right', fontStyle: 'bold' } }],
+            [{ content: '3. Base de Comparación (Mayor Valor)', styles: { fontStyle: 'bold' } }, rAlc.detalle, { content: `S/ ${formatNumber(rAlc.baseComparacion)}`, styles: { halign: 'right', fontStyle: 'bold', textColor: accentBlue } }],
+            ['4. Deducción Legal Inafecta (-10 UIT)', `10 x S/ ${formatNumber(uit)} (Art. 25 TUO Ley Tributación Municipal)`, { content: `-S/ ${formatNumber(rAlc.deduccion10Uit)}`, styles: { halign: 'right', textColor: [220, 38, 38] } }],
+            ['5. Base Imponible Neta', 'Base de Comparación menos Deducción 10 UIT (Mínimo 0)', { content: `S/ ${formatNumber(rAlc.baseImponible)}`, styles: { halign: 'right', fontStyle: 'bold' } }],
+            ['% de Participación Aplicado', 'Proporción de copropiedad o acciones y derechos', { content: `${(rAlc.participationPct * 100).toFixed(2)}%`, styles: { halign: 'right' } }],
+            [
+              { content: 'TOTAL IMPUESTO DE ALCABALA (3%):', styles: { fontStyle: 'bold', fontSize: 9.5, textColor: primaryNavy } },
+              { content: 'Tasa 3% sobre Base Neta x % Participación', styles: { fontStyle: 'bold', fontSize: 8.5 } },
+              { content: `S/ ${formatNumber(rAlc.taxSoles)}  (US$ ${formatNumber(rAlc.taxUsd)})`, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9.5, textColor: primaryNavy } }
+            ]
+          ],
+          theme: 'grid',
+          alternateRowStyles: { fillColor: zebraGrey },
+          styles: {
+            fontSize: 7.8,
+            cellPadding: 2,
+            lineColor: [203, 213, 225],
+            lineWidth: 0.2
+          },
+          margin: { left: 14, right: 14 }
+        });
+
+        startY = doc.lastAutoTable.finalY + 6;
+      }
+
+      // Check remaining page space before Cuadro 3
+      if (startY > 210 && (exportOption === 'both')) {
+        doc.addPage();
+        startY = 14;
+      }
+
+      // ==================================================================
+      // CUADRO 3: LIQUIDACIÓN IMPUESTO A LA RENTA 2DA CATEGORÍA (SUNAT)
+      // ==================================================================
+      if (exportOption === 'both' || exportOption === 'renta') {
+        const rRen2 = calcResults.renta2;
+
+        let tableRows = [
+          ['1. Costo de Adquisición Original', rRen2.acqCurrency === 'USD' ? `US$ ${formatNumber(rRen2.acqPriceRaw)} a TC Histórico S/ ${rRen2.historicalTc.toFixed(3)}` : 'Adquisición en Soles', { content: `S/ ${formatNumber(rRen2.acqSolesHist)}`, styles: { halign: 'right', fontStyle: 'bold' } }],
+          ['2. Reajuste Monetario (ICM MEF)', `Factor ICM aplicado: ${rRen2.icmFactor.toFixed(2)} (MEF)`, { content: `+S/ ${formatNumber(rRen2.incrementoIcm)}`, styles: { halign: 'right', textColor: [5, 150, 105] } }],
+          ['3. Costo de Mejoras Demostrables', 'Inversiones y obras con comprobantes fehacientes', { content: `+S/ ${formatNumber(rRen2.improvements)}`, styles: { halign: 'right' } }],
+          [{ content: '4. Costo Computable Actualizado', styles: { fontStyle: 'bold' } }, 'Costo Histórico indexado con ICM + Mejoras', { content: `S/ ${formatNumber(rRen2.costoActualizadoIcm)}`, styles: { halign: 'right', fontStyle: 'bold' } }],
+          ['5. Precio de Venta Actual en Soles', rRen2.saleCurrency === 'USD' ? `US$ ${formatNumber(rRen2.salePriceRaw)} x TC Venta S/ ${rRen2.saleTc.toFixed(3)}` : 'Venta en Soles', { content: `S/ ${formatNumber(rRen2.saleSoles)}`, styles: { halign: 'right', fontStyle: 'bold' } }],
+          [{ content: '6. Ganancia de Capital Neta', styles: { fontStyle: 'bold' } }, 'Precio Venta menos Costo Computable Actualizado', { content: `S/ ${formatNumber(Math.max(0, rRen2.gananciaCapital))}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] } }],
+          ['% de Participación Aplicado', 'Proporción atribuible a la parte enajenante', { content: `${(rRen2.participationPct * 100).toFixed(2)}%`, styles: { halign: 'right' } }]
+        ];
+
+        if (rRen2.isExempt) {
+          tableRows.unshift([
+            { content: `CONDICIÓN LEGAL: ${rRen2.exemptReason}`, colSpan: 3, styles: { halign: 'center', fontStyle: 'bold', fillColor: [209, 250, 229], textColor: [6, 95, 70] } }
+          ]);
+        }
+
+        tableRows.push([
+          { content: 'TOTAL IMPUESTO A LA RENTA 2DA CAT. (5%):', styles: { fontStyle: 'bold', fontSize: 9.5, textColor: [6, 95, 70] } },
+          { content: 'Tasa 5% definitiva sobre Ganancia de Capital x % Part.', styles: { fontStyle: 'bold', fontSize: 8.5 } },
+          { content: `S/ ${formatNumber(rRen2.taxSoles)}  (US$ ${formatNumber(rRen2.taxUsd)})`, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9.5, textColor: [6, 95, 70] } }
+        ]);
+
+        doc.autoTable({
+          startY: startY,
+          head: [
+            [
+              { content: 'CUADRO 3: LIQUIDACIÓN DE IMPUESTO A LA RENTA 2DA CATEGORÍA (VENDEDOR - SUNAT)', colSpan: 3, styles: { fillColor: primaryNavy } }
+            ],
+            [
+              { content: 'Concepto / Paso del Cálculo', styles: { halign: 'left', fillColor: [6, 95, 70], textColor: 255 } },
+              { content: 'Factor / Detalle Aplicado', styles: { halign: 'left', fillColor: [6, 95, 70], textColor: 255 } },
+              { content: 'Importe en Soles (S/)', styles: { halign: 'right', fillColor: [6, 95, 70], textColor: 255 } }
+            ]
+          ],
+          body: tableRows,
+          theme: 'grid',
+          alternateRowStyles: { fillColor: zebraGrey },
+          styles: {
+            fontSize: 7.8,
+            cellPadding: 2,
+            lineColor: [203, 213, 225],
+            lineWidth: 0.2
+          },
+          margin: { left: 14, right: 14 }
+        });
+
+        startY = doc.lastAutoTable.finalY + 6;
+      }
+
+      // ==================================================================
+      // CUADRO 4: RENTA 1RA CATEGORÍA (ALQUILERES)
+      // ==================================================================
+      if (exportOption === 'renta1') {
+        const rRen1 = calcResults.renta1;
+
+        doc.autoTable({
+          startY: startY,
+          head: [
+            [
+              { content: 'CUADRO 4: LIQUIDACIÓN DE RENTA DE 1RA CATEGORÍA (ARRENDAMIENTO - SUNAT)', colSpan: 3, styles: { fillColor: primaryNavy } }
+            ],
+            [
+              { content: 'Concepto / Periodo', styles: { halign: 'left', fillColor: [180, 83, 9], textColor: 255 } },
+              { content: 'Base Imponible / Criterio Legal', styles: { halign: 'left', fillColor: [180, 83, 9], textColor: 255 } },
+              { content: 'Importe en Soles (S/)', styles: { halign: 'right', fillColor: [180, 83, 9], textColor: 255 } }
+            ]
+          ],
+          body: [
+            ['1. Alquiler Bruto Mensual', rRen1.currency === 'USD' ? `US$ ${formatNumber(rRen1.rentMonthlyRaw)} x TC S/ ${rRen1.rentTc.toFixed(3)}` : 'Pactado en Soles', { content: `S/ ${formatNumber(rRen1.rentMonthlySoles)}`, styles: { halign: 'right', fontStyle: 'bold' } }],
+            ['2. Pago a Cuenta Mensual (5%)', '5% directo sobre el alquiler percibido', { content: `S/ ${formatNumber(rRen1.taxMonthlySoles)}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [180, 83, 9] } }],
+            ['3. Proyección Anual (12 Meses)', 'Estimado de impuesto anual recurrente', { content: `S/ ${formatNumber(rRen1.taxAnnualSoles)}`, styles: { halign: 'right' } }],
+            ['4. Comparativa Presunción 6% Autovalúo', `6% de Autovalúo S/ ${formatNumber(rRen1.autovaluo)} (Art. 23 Ley IR)`, { content: `S/ ${formatNumber(rRen1.rentaFictaMinima)}`, styles: { halign: 'right' } }],
+            [
+              { content: 'TOTAL IMPUESTO MENSUAL A PAGAR:', styles: { fontStyle: 'bold', fontSize: 9.5, textColor: [180, 83, 9] } },
+              { content: 'Guía Pago Fácil Arrendamiento Formulario 1683', styles: { fontStyle: 'bold', fontSize: 8.5 } },
+              { content: `S/ ${formatNumber(rRen1.taxMonthlySoles)}  (US$ ${formatNumber(rRen1.taxMonthlyUsd)})`, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9.5, textColor: [180, 83, 9] } }
+            ]
+          ],
+          theme: 'grid',
+          alternateRowStyles: { fillColor: zebraGrey },
+          styles: {
+            fontSize: 7.8,
+            cellPadding: 2,
+            lineColor: [203, 213, 225],
+            lineWidth: 0.2
+          },
+          margin: { left: 14, right: 14 }
+        });
+
+        startY = doc.lastAutoTable.finalY + 6;
+      }
+
+      // Check space for footer notes
+      if (startY > 250) {
+        doc.addPage();
+        startY = 14;
+      }
+
+      // PIE DE PÁGINA FORMAL & NOTA LEGAL
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(primaryNavy[0], primaryNavy[1], primaryNavy[2]);
+      doc.text(`Asesor Inmobiliario Responsable: ${agentName}  |  Teléfono / WhatsApp: ${agentPhone}  |  Empresa: ${agentAgency}`, 14, startY + 4);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139);
+      const legalText = 'Nota Legal: Documento técnico de carácter referencial emitido conforme a las directrices vigentes de la Ley de Tributación Municipal (D.S. 156-2004-EF) y Texto Único Ordenado de la Ley del Impuesto a la Renta (D.S. 179-2004-EF). Los valores definitivos son liquidados por el SAT/Municipalidad distrital competente y declarados ante SUNAT mediante formularios virtuales oficiales.';
+      doc.text(legalText, 14, startY + 8, { maxWidth: 182, align: 'justify' });
+
+      // Save PDF with clear naming
+      const sanitizedClient = clientName.replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `Liquidacion_Tributaria_${sanitizedClient}_${dateStr.replace(/\//g, '-')}.pdf`;
+      doc.save(filename);
+
+      showToast('Reporte PDF descargado con éxito', 'fa-file-pdf');
+    }
+
+    /* ====================================================================
+       LOCALSTORAGE SIMULATION HISTORY
+       ==================================================================== */
+    function saveCurrentSimulation() {
+      const clientName = document.getElementById('clientName').value || 'Cliente General';
+      const address = document.getElementById('propertyAddress').value || 'Sin dirección';
+      const propType = document.getElementById('propertyType').value;
+      const mode = currentOperationMode;
+      const date = new Date().toLocaleString('es-PE');
+
+      const sim = {
+        id: 'sim_' + Date.now(),
+        date: date,
+        clientName: clientName,
+        propertyAddress: address,
+        propertyType: propType,
+        mode: mode,
+        calcResults: calcResults,
+        uit: document.getElementById('uitValue').value,
+        tc: document.getElementById('exchangeRate').value,
+        agentName: document.getElementById('agentName').value,
+        agentPhone: document.getElementById('agentPhone').value
+      };
+
+      let history = [];
+      try {
+        const stored = localStorage.getItem('protax_history');
+        if (stored) history = JSON.parse(stored);
+      } catch(e) { history = []; }
+
+      history.unshift(sim);
+      if (history.length > 20) history = history.slice(0, 20); // max 20 entries
+      localStorage.setItem('protax_history', JSON.stringify(history));
+
+      showToast('Liquidación guardada en Historial', 'fa-floppy-disk');
+    }
+
+    function openHistoryModal() {
+      const modal = document.getElementById('historyModal');
+      const container = document.getElementById('historyListContainer');
+      modal.classList.remove('hidden');
+
+      let history = [];
+      try {
+        const stored = localStorage.getItem('protax_history');
+        if (stored) history = JSON.parse(stored);
+      } catch(e) { history = []; }
+
+      if (history.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-400">
+            <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300"></i>
+            <p class="text-xs">No hay liquidaciones guardadas todavía.</p>
+            <p class="text-[11px] text-slate-400 mt-1">Usa el botón "Guardar en Historial" en el Paso 4 para almacenar cálculos.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = history.map(item => `
+        <div class="border border-slate-200 rounded-lg p-3 hover:bg-slate-50 transition flex items-center justify-between gap-3 text-xs">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-900">${item.clientName}</span>
+              <span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium">${item.propertyType}</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5">${item.propertyAddress}</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">${item.date} • Modo: ${item.mode.toUpperCase()}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="loadSimulation('${item.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-upload"></i> Cargar
+            </button>
+            <button onclick="deleteSimulation('${item.id}')" class="text-rose-500 hover:text-rose-700 p-1 text-xs" title="Eliminar">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.add('hidden');
+    }
+
+    function loadSimulation(id) {
+      let history = [];
+      try {
+        const stored = localStorage.getItem('protax_history');
+        if (stored) history = JSON.parse(stored);
+      } catch(e) { history = []; }
+
+      const sim = history.find(s => s.id === id);
+      if (!sim) return;
+
+      document.getElementById('clientName').value = sim.clientName || '';
+      document.getElementById('propertyAddress').value = sim.propertyAddress || '';
+      document.getElementById('propertyType').value = sim.propertyType || 'Casa';
+      if (sim.uit) document.getElementById('uitValue').value = sim.uit;
+      if (sim.tc) document.getElementById('exchangeRate').value = sim.tc;
+      if (sim.agentName) document.getElementById('agentName').value = sim.agentName;
+      if (sim.agentPhone) document.getElementById('agentPhone').value = sim.agentPhone;
+
+      selectMode(sim.mode || 'full');
+      closeHistoryModal();
+      goToStep(4);
+      showToast('Liquidación cargada correctamente', 'fa-check');
+    }
+
+    function deleteSimulation(id) {
+      let history = [];
+      try {
+        const stored = localStorage.getItem('protax_history');
+        if (stored) history = JSON.parse(stored);
+      } catch(e) { history = []; }
+
+      history = history.filter(s => s.id !== id);
+      localStorage.setItem('protax_history', JSON.stringify(history));
+      openHistoryModal();
+      showToast('Registro eliminado', 'fa-trash');
+    }
+
+    function clearAllHistory() {
+      if (confirm('¿Estás seguro de borrar todo el historial de liquidaciones?')) {
+        localStorage.removeItem('protax_history');
+        openHistoryModal();
+        showToast('Historial vaciado', 'fa-trash');
+      }
+    }
+
+    function resetAllFields() {
+      if (confirm('¿Deseas reiniciar todos los campos del formulario con los valores por defecto?')) {
+        document.getElementById('clientName').value = 'Inversiones & Gestiones SAC';
+        document.getElementById('propertyAddress').value = 'Terreno Carabayllo - Mz. B Lote 14, Urb. Las Palmeras';
+        document.getElementById('propertyType').value = 'Terreno Urbano';
+        document.getElementById('participationRate').value = '100';
+        document.getElementById('uitValue').value = '5500';
+        document.getElementById('exchangeRate').value = '3.750';
+        document.getElementById('alcabalaSalePrice').value = '250000';
+        document.getElementById('alcabalaAutovaluo').value = '180000';
+        document.getElementById('alcabalaIpm').value = '1.00';
+        document.getElementById('alcabalaConstructorSwitch').checked = false;
+        toggleConstructorOptions();
+
+        document.getElementById('rentaSalePrice').value = '250000';
+        document.getElementById('rentaAcqPrice').value = '45000';
+        document.getElementById('rentaHistoricalTc').value = '3.300';
+        document.getElementById('rentaImprovements').value = '0';
+        document.getElementById('switchPre2004').checked = false;
+        document.getElementById('switchCasaHabitacion').checked = false;
+        document.getElementById('switchGratuito').checked = false;
+
+        setAlcabalaCurrency('PEN');
+        setRentaSaleCurrency('PEN');
+        setRentaAcqCurrency('USD');
+        setRentCurrency('PEN');
+
+        selectMode('full');
+        goToStep(1);
+        showToast('Formulario reiniciado', 'fa-arrow-rotate-left');
+      }
+    }
+
+    /* ====================================================================
+       HELPER UTILITIES
+       ==================================================================== */
+    function formatNumber(num) {
+      if (isNaN(num) || num === null || num === undefined) return '0.00';
+      return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function showToast(msg, iconClass = 'fa-check') {
+      const toast = document.getElementById('toastNotification');
+      const msgEl = document.getElementById('toastMsg');
+      const iconEl = document.getElementById('toastIcon');
+
+      msgEl.innerText = msg;
+      iconEl.className = `fa-solid ${iconClass} text-emerald-400`;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2800);
+    }
+  </script>
+</body>
+</html>
